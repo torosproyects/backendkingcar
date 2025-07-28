@@ -78,9 +78,13 @@ app.use('/*splat', (req, res) => {
 })
 
 // Iniciar el servidor
-app.listen(PORT, () => {
-  logger.info(`Servidor corriendo en el puerto ${PORT}`);
-});
+try {
+  app.listen(PORT, () => {
+    logger.info(`Servidor corriendo en el puerto ${PORT}`);
+  });
+} catch (err) {
+  console.error("Fallo al iniciar el servidor:", err);
+}
 
 // Manejar errores no capturados
 process.on("uncaughtException", (error) => {
