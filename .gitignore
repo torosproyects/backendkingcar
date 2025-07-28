@@ -1,0 +1,43 @@
+# Archivos generados por Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+.pnpm-debug.log
+
+# Archivos de entorno y sensibles
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.cert
+
+# Directorios de producción/build
+dist/
+build/
+.coverage/
+
+# Logs y reportes
+logs/
+*.log
+*.pid
+
+# Configuraciones de IDE/Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Dependencias y paquetes
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Archivos de testing y depuración
+.nyc_output/
+coverage/
+
+# Archivos de sistema
+Thumbs.db
+ehthumbs.db

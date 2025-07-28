@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0  # Versión estable
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword  # Cambia esto en producción
+      MYSQL_DATABASE: carrosking
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin123
+    ports:
+      - "3306:3306"  # Puerto estándar MySQL
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+
+  adminer:  # Interfaz web para gestionar la DB
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql_data:
