@@ -2,7 +2,7 @@ import User from "../models/User.js";
 import UserPre from "../models/UserPre.js";
 import { generateToken, generateVerificationCode } from "../utils/security.js";
 import { sendVerificationEmail } from "../utils/emailService.js";
-import { logger } from "../utils/logger.js";
+
 
 // Configuración de cookies
 const cookieOptions = {
@@ -66,15 +66,6 @@ export const verifyAndRegister = async (req, res, next) => {
       name: preRegistrationData.name
     });
     
-    const verificado = {
-      is_verified: false,
-      role: "Usuario" 
-    };
-      
-    // Generar token JWT
-    const token = generateToken(userId, verificado);
-    // Establecer cookie con el token
-    res.cookie('token', token, cookieOptions);
     
     const usera = await User.findById(userId);
     const user = {
@@ -85,6 +76,11 @@ export const verifyAndRegister = async (req, res, next) => {
       createdAt: new Date(usera.fecha_registro).toISOString(),
       profileStatus: "pendiente"
     };
+    // Generar token JWT
+    const token = generateToken(user);
+    // Establecer cookie con el token
+    res.cookie('token', token, cookieOptions);
+   
     
     res.status(200).json({
       success: true,
@@ -108,10 +104,6 @@ export const login = async (req, res, next) => {
     
     const verificado = await User.verificarAutenti(usera.id);
      
-    // Generar token JWT
-    const token = generateToken(usera, verificado);
-    // Establecer cookie con el token
-    res.cookie('token', token, cookieOptions);
     
     const user = {
       id: String(usera.id),
@@ -119,9 +111,13 @@ export const login = async (req, res, next) => {
       name: usera.name, 
       role: verificado.rol, 
       createdAt: new Date(usera.fecha_registro).toISOString(),
-      profileStatus: "verificado"
+      profileStatus: verificado.usuario_existe ? "verificado" : "pendiente"
     };
-    console.log(user)
+    // Generar token JWT
+    const token = generateToken(user);
+    // Establecer cookie con el token
+    res.cookie('token', token, cookieOptions);
+    
     res.status(200).json({
       success: true,
       user
@@ -160,12 +156,27 @@ export const resendVerificationCode = async (req, res, next) => {
 // Obtener perfil de usuario
 export const getProfile = async (req, res, next) => {
   try {
+  
     // req.user viene del middleware de autenticación
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(404).json({ error: "Usuario no encontrado" });
+    const useraa = await User.findById(req.user.id);
+    if (!useraa) {
+      return res.status(401).json({ error: "Usuario no encontrado" });
     }
+     const verificado = await User.verificarAutenti(useraa.id);
+     const user = {
+      id: String(useraa.id),
+      email: useraa.email,
+      name: useraa.name, 
+      role: verificado.rol, 
+      createdAt: new Date(useraa.fecha_registro).toISOString(),
+      profileStatus: verificado.usuario_existe ? "verificado" : "pendiente"
+    };
 
+    // Generar token JWT
+    const token = generateToken(user);
+    // Establecer cookie con el token
+    res.cookie('token', token, cookieOptions);
+    
     res.status(200).json({
       success: true,
       user,

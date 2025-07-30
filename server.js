@@ -24,7 +24,7 @@ app.use(helmet()); // Ayuda a proteger la app configurando varios headers HTTP
 
 // Configuración de CORS con soporte para cookies
 const allowedOrigins = [process.env.FRONTEND_URL || "http://localhost:3000"];
-app.use(
+/*app.use(
   cors({
     origin: function(origin, callback) {
       if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -36,16 +36,14 @@ app.use(
     credentials: true, // Importante para cookies
     allowedHeaders: ['Content-Type', 'Authorization']
   })
+);*/
+app.use(
+  cors({
+    origin: true, // Refleja dinámicamente el origin del request
+    credentials: true, // Permite cookies
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
 );
-//ojo es para usar de servidor local
-/*app.use(cors({
-  origin: function (origin, callback) {
-    callback(null, true); // Permite todos los orígenes
-  },
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));*/
-
 // Middleware para parsear JSON y cookies
 const jsonMiddleware = express.json();
 const urlencodedMiddleware = express.urlencoded({ extended: true });

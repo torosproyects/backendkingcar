@@ -49,7 +49,7 @@ export default class User {
     [id]
   );
   if (!usuario.length) {
-    return { usuario_existe: false, rol: "Por Verificar" };
+    return { usuario_existe: false, rol: "visitante" };
   }
 
   // 2. Obtener rol si existe

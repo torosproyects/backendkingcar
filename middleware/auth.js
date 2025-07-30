@@ -16,6 +16,7 @@ export const authenticate = (req, res, next) => {
     // Verificar y decodificar el token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
+   
     next();
   } catch (error) {
     logger.error("Error de autenticación:", error.message);

@@ -1,6 +1,17 @@
 // controllers/verificationController.js
 import { processVerificationRequest } from '../service/verificationUService.js';
 import { logger } from '../utils/logger.js';
+import User from "../models/User.js";
+import { generateToken } from "../utils/security.js";
+
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+  maxAge: 60 * 60 * 1000,
+  path: '/'
+};
 
 /**
  * Maneja la solicitud POST para crear una nueva verificación de perfil.
@@ -9,6 +20,7 @@ import { logger } from '../utils/logger.js';
  */
 export const createVerificationRequestCtrl = async (req, res) => {
   try {
+    
        // Validación básica del lado del servidor
     if (!req.body.firstName || !req.body.email || !req.body.phone || !req.body.documentNumber || !req.body.requestedRole) {
          logger.warn('Datos incompletos en la solicitud de verificación.');
@@ -78,10 +90,27 @@ export const createVerificationRequestCtrl = async (req, res) => {
 
     // Llamar al servicio para procesar la solicitud
     const result = await processVerificationRequest(verificationData);
+    
+         const usera = await User.findById(req.user.id);
+         const userz= await User.verificarAutenti(req.user.id);
+            
+         const user = {
+           id: String(usera.id),
+           email: usera.email,
+           name: usera.name, 
+           role: userz.role,
+           createdAt: new Date(usera.fecha_registro).toISOString(),
+           profileStatus: "verificado"
+         };
+
+     // Generar token JWT
+         const token = generateToken(user);
+         // Establecer cookie con el token
+         res.cookie('token', token, cookieOptions);
 
     res.status(201).json({
-      message: result.message,
-      requestId: result.requestId,
+      success: true,
+      user
     });
 
   } catch (error) {

@@ -14,12 +14,13 @@ export const comparePassword = async (password, hashedPassword) => {
 };
 
 // Generar token JWT
-export const generateToken = (user, verificado) => {
+export const generateToken = (user) => {
+ 
   const payload = {
     id: user.id,
     name: user.name,
     email: user.email,
-    role: verificado.rol || "Por Verificar" 
+    role: user.rol 
   };
 
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
