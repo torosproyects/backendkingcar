@@ -5,10 +5,9 @@ import { query } from '../config/database.js';
 // Middleware para verificar token JWT
 export const authenticate = (req, res, next) => {
   try {
-     
     // Obtener el token de las cookies
     const token = req.cookies.token;
-    
+
     if (!token) {
       return res.status(401).json({ error: "No autorizado - Token no proporcionado en cookies" });
     }
@@ -16,7 +15,6 @@ export const authenticate = (req, res, next) => {
     // Verificar y decodificar el token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
-   
     next();
   } catch (error) {
     logger.error("Error de autenticación:", error.message);
@@ -119,7 +117,7 @@ export const checkOwnership = (resourceType) => {
 
       switch (resourceType) {
         case 'car':
-          table = 'cars';
+          table = 'carrosx';
           ownerField = 'owner_id';
           break;
         case 'auction':

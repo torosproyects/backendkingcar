@@ -40,7 +40,7 @@ export const deleteCloudinaryResources = async (resources) => {
       resources.map(r => r.publicId),
       { type: 'upload', resource_type: 'image' }
     );
-    console.log(`Rollback: Eliminadas ${resources.length} imágenes de Cloudinary`);
+   
   } catch (error) {
     console.error('Error en rollback de Cloudinary:', error);
     // Puede fallar si las imágenes no existen

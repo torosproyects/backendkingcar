@@ -23,7 +23,7 @@ class Auction {
     const [rows] = await pool.query(
       `SELECT a.*, c.make, c.model, c.year, c.mileage, c.image_urls 
        FROM auctions a
-       JOIN cars c ON a.car_id = c.id
+       JOIN carrosx c ON a.car_id = c.id
        WHERE a.status = 'active' AND a.end_time > NOW()`
     );
     return rows;
@@ -33,7 +33,7 @@ class Auction {
     const [rows] = await pool.query(
       `SELECT a.*, c.make, c.model, c.year, c.mileage, c.image_urls 
        FROM auctions a
-       JOIN cars c ON a.car_id = c.id
+       JOIN carrosx c ON a.car_id = c.id
        WHERE a.id = ?`,
       [id]
     );

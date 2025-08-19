@@ -10,6 +10,7 @@ const urlencodedMiddleware = express.urlencoded({ extended: true });
 router.post('/', authenticate, upload.array('photos'), carController.uploadCar)
 
 router.get("/",jsonMiddleware, urlencodedMiddleware, carController.getAllCars)
+router.get('/:userId/cars',jsonMiddleware, urlencodedMiddleware, carController.getUserCars);
 
 
 export default router;

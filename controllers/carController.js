@@ -102,4 +102,31 @@ export default class CarController {
       });
     }
   }
+  static async getUserCars (req, res) {
+  const {userId} = req.params;
+  const userIdInt = parseInt(userId, 10);
+
+  // Validar que userId sea un número
+  if (isNaN(userIdInt)) {
+    return res.status(400).json({ message: 'Invalid user ID' });
+  }
+
+  try {
+    const cars = await Car.findByUserId(userIdInt);
+
+    if (cars.length === 0) {
+      return res.status(404).json({
+        message: 'No cars found for this user',
+      });
+    }
+
+    res.status(200).json(cars);
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({
+      message: 'Server error while fetching cars',
+      error: error.message,
+    });
+  }
+}
 }

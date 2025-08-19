@@ -125,6 +125,67 @@ static async getAll() {
       [values]
     );
   }
+  static async findByUserId(userId) {
+    const sql = `SELECT CAST(c.id AS CHAR) AS id, m.nombre AS make, mo.nombre AS model, c.year,c.kilometraje AS mileage, c.color, c.descripcion AS \`description\`, c.condicion AS \`condition\`, c.precio AS estimatedValue, u.documento AS ownerid, ic.id AS image_id,ic.url AS image_url,ic.es_principal AS is_principal FROM carrosx c JOIN modelos mo ON c.modelo_id = mo.id JOIN marcas m ON mo.marca_id = m.id JOIN usuario u ON c.usuario_id = u.documento JOIN pre_registro pr ON u.pre_registro_id = pr.id LEFT JOIN imagenes_carrosx ic ON c.id = ic.carro_id WHERE pr.id = ? AND ( SELECT ec.id_estado FROM carrosx_estadocar ec WHERE ec.id_car = c.id ORDER BY ec.fecha_inicio DESC LIMIT 1) = ( SELECT id FROM estadocar WHERE nombre = 'venta' LIMIT 1 ) ORDER BY c.id, ic.es_principal DESC, ic.id`;
+
+     try {
+    const rows = await query(sql, [userId]);
+
+    if (rows.length === 0) {
+      return [];
+    }
+
+    // Agrupar por carro
+    const carsMap = new Map();
+
+    rows.forEach(row => {
+      const {
+        id, make, model,
+        year,
+        mileage,
+        color,
+        description,
+        condition,
+        estimatedValue,
+        ownerid,
+        image_id,
+        image_url,
+        is_principal
+      } = row;
+
+      if (!carsMap.has(id)) {
+        carsMap.set(id, {
+          id, make,model,year, mileage,color, description, condition, estimatedValue, ownerid,
+          imagen: null, // imagen principal
+          images: []  // otras imágenes con id y url
+        });
+      }
+
+      const car = carsMap.get(id);
+
+      // Si tiene imagen
+      if (image_id !== null) {
+        if (is_principal) {
+          // Si es principal, asignar al campo `image`
+          car.imagen = image_url;
+        } else {
+          // Si no es principal, agregar al array `images` como objeto
+          car.images.push({
+            id: image_id,
+            url: image_url
+          });
+        }
+      }
+    });
+
+    // Convertir el Map a array
+     return Array.from(carsMap.values());
+
+  } catch (error) {
+    console.error("Error en Car.findByUserId():", error);
+    throw error;
+  }
+  }
 
 
 }

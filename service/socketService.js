@@ -13,7 +13,7 @@ export const init = (server) => {
   io.on('connection', (socket) => {
     console.log('New client connected');
 
-    // Join auction room
+   
     socket.on('joinAuction', (auctionId) => {
       socket.join(`auction_${auctionId}`);
       console.log(`User joined auction ${auctionId}`);
