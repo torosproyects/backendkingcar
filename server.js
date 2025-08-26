@@ -83,8 +83,8 @@ io.use((socket, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     // Adjuntamos info al socket
-    socket.userId = decoded.userId;
-    socket.userName = decoded.userName || decoded.email || 'user';
+    socket.userId = decoded.id;
+    socket.userName = decoded.name|| 'user';
     return next();
   } catch (err) {
     return next(new Error('Authentication error: Invalid token'));

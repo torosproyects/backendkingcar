@@ -20,26 +20,26 @@ router.get('/', authenticate, async (req, res) => {
       params.push(status);
     }
 
-    const auctionsQuery = `
-      SELECT 
-        a.*,
-        c.make, c.model, c.year, c.mileage, c.color, c.condition_status as condition_status,
-        c.description as car_description, c.estimated_value, c.images,
-        (SELECT COUNT(*) FROM bids b WHERE b.auction_id = a.id) as bid_count,
-        (SELECT COUNT(*) FROM auction_watchers aw WHERE aw.auction_id = a.id) as watchers_count
-      FROM auctions a
-      JOIN carrosx c ON a.car_id = c.id
-      ${whereClause}
-      ORDER BY 
-        CASE 
-          WHEN a.status = 'active' THEN 1
-          WHEN a.status = 'upcoming' THEN 2
-          WHEN a.status = 'ended' THEN 3
-        END,
-        a.end_time ASC
-      LIMIT ? OFFSET ?
-    `;
-
+    const auctionsQuery = `SELECT 
+ a.*, mox.nombre as model, mar.nombre as make,u.pre_registro_id as id_pro,
+c.year, c.kilometraje as mileage, c.color, c.condicion as condition_status,
+c.descripcion as car_description, c.precio as estimated_value,
+(SELECT COUNT(*) FROM bids b WHERE b.auction_id = a.id) as bid_count, (SELECT COUNT(*) FROM auction_watchers aw WHERE aw.auction_id = a.id) as watchers_count
+ FROM auctions a
+JOIN carrosx c ON a.car_id = c.id
+JOIN modelos mox ON c.modelo_id = mox.id
+JOIN marcas mar ON mox.marca_id = mar.id
+JOIN usuario u ON c.usuario_id = u.documento
+${whereClause ? 'WHERE ' + whereClause : ''}
+ORDER BY 
+CASE 
+WHEN a.status = 'active' THEN 1
+WHEN a.status = 'upcoming' THEN 2
+WHEN a.status = 'ended' THEN 3
+END,
+a.end_time ASC
+LIMIT ? OFFSET ?
+`;
     params.push(parseInt(limit), parseInt(offset));
     const auctions = await query(auctionsQuery, params);
 
@@ -94,7 +94,7 @@ router.get('/', authenticate, async (req, res) => {
           })),
           watchers: parseInt(auction.watchers_count),
           isWatched,
-          sellerId: auction.seller_id,
+          sellerId: auction.id_pro,
           sellerName: auction.seller_name
         };
       })
@@ -116,15 +116,7 @@ router.get('/:id', validateParams(paramSchemas.uuid), optionalAuth, async (req, 
   try {
     const { id } = req.params;
 
-    const auctionsQuery = `
-      SELECT 
-        a.*,
-        c.make, c.model, c.year, c.mileage, c.color, c.condition_status,
-        c.description as car_description, c.estimated_value, c.images
-      FROM auctions a
-      JOIN carrosx c ON a.car_id = c.id
-      WHERE a.id = ?
-    `;
+    const auctionsQuery = `SELECT a.*, c.year, m.nombre AS marca, mo.nombre AS modelo, c.kilometraje,c.color, c.condicion, c.descripcion, ic_principal.url AS imagen_principal, ic.id AS image_id, ic.url AS image_url, ic.es_principal AS is_principal FROM auctions a JOIN carrosx c ON a.car_id = c.id JOIN modelos mo ON c.modelo_id = mo.id JOIN marcas m ON mo.marca_id = m.id LEFT JOIN imagenes_carrosx ic ON c.id = ic.carro_id LEFT JOIN imagenes_carrosx ic_principal ON c.id = ic_principal.carro_id AND ic_principal.es_principal = TRUE WHERE a.id = ? ORDER BY ic.es_principal DESC, ic.id LIMIT 100`;
 
     const auctions = await query(auctionsQuery, [id]);
 
@@ -133,6 +125,73 @@ router.get('/:id', validateParams(paramSchemas.uuid), optionalAuth, async (req, 
         error: 'Subasta no encontrada',
         code: 'AUCTION_NOT_FOUND'
       });
+    }
+    console.log("000000000000000000000000000000000",auctions)
+    const processedData = auctions.reduce((acc, row) => {
+        if (!acc.car) {
+            acc = {
+                id: row.id,
+                car: {
+                    id: row.car_id,
+                    make: row.marca,
+                    model: row.modelo,
+                    year: row.year,
+                    mileage: row.kilometraje,
+                    color: row.color, 
+                    condition: row.condicion,
+                    description: row.descripcion,
+                    estimatedValue: parseFloat(row.precio), 
+                    images: []
+                },
+                startPrice: parseFloat(row.start_price),
+                reservePrice: row.reserve_price ? parseFloat(row.reserve_price) : null,
+                currentBid: parseFloat(row.current_bid || 0),
+                bidCount: row.bid_count || 0,
+                highestBidder: row.highest_bidder || null,
+                highestBidderName: row.highest_bidder_name || null,
+                startTime: row.start_time,
+                endTime: row.end_time,
+                status: row.status,
+                bids: [],
+                watchers: row.watchers || 0,
+                isWatched: false,
+                sellerId: row.seller_id,
+                sellerName: row.seller_name || ''
+            };
+        }
+
+        // Procesar imágenes
+        if (row.image_id) {
+            if (row.is_principal) {
+                // Si hay imagen principal, la colocamos primero
+                acc.car.images.unshift({
+                    id: row.image_id,
+                    url: row.image_url,
+                    isMain: true
+                });
+            } else {
+                acc.car.images.push({
+                    id: row.image_id,
+                    url: row.image_url,
+                    isMain: false
+                });
+            }
+        }
+
+        return acc;
+    }, {});
+
+    // Si hay imagen_principal directa (de tu consulta)
+    if (auctions[0].imagen_principal) {
+        // Verificamos que no esté ya incluida
+        const exists = processedData.car.images.some(img => img.isMain);
+        if (!exists) {
+            processedData.car.images.unshift({
+                id: auctions[0].image_id,
+                url: auctions[0].imagen_principal,
+                isMain: true
+            });
+        }
     }
 
     const auction = auctions[0];
@@ -163,14 +222,14 @@ router.get('/:id', validateParams(paramSchemas.uuid), optionalAuth, async (req, 
       id: auction.id,
       car: {
         id: auction.car_id,
-        make: auction.make,
-        model: auction.model,
+        make: auction.marca,
+        model: auction.modelo,
         year: auction.year,
-        mileage: auction.mileage,
+        mileage: auction.kilometraje,
         color: auction.color,
-        condition: auction.condition_status,
-        description: auction.car_description,
-        estimatedValue: parseFloat(auction.estimated_value),
+        condition: auction.condicion,
+        description: auction.descripcion,
+        estimatedValue: parseFloat(auction.start_price),
         images: JSON.parse(auction.images || '[]')
       },
       startPrice: parseFloat(auction.start_price),
@@ -195,7 +254,7 @@ router.get('/:id', validateParams(paramSchemas.uuid), optionalAuth, async (req, 
       sellerId: auction.seller_id,
       sellerName: auction.seller_name
     };
-
+console.log(response)
     res.json(response);
 
   } catch (error) {
