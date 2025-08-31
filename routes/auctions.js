@@ -1,21 +1,15 @@
-import express from 'express'
-import productController from '../controllers/productController.js'
-import { authenticate, isVerified, isAdmin } from '../middleware/auth.js'
-import { productValidation } from '../middleware/validator.js'
+import express from 'express';
+import AuctionController from '../controllers/auctionController.js';
+import { authenticate, optionalAuth } from '../middleware/auth.js';
+import { validate, validateParams, paramSchemas } from '../middleware/validationsuba.js';
 
-const router = express.Router()
+const router = express.Router();
 
-// Rutas públicas
-router.get("/", productController.getProducts)
-router.get("/filter-options", productController.getFilterOptions)
-
-// Rutas que requieren autenticación
-router.get("/:id", authenticate, isVerified, productController.getProductById)
-router.get("/:id/related", authenticate, isVerified, productController.getRelatedProducts)
-
-// Rutas que requieren permisos de administrador
-router.post("/", authenticate, isVerified, isAdmin, productValidation, productController.createProduct)
-router.put("/:id", authenticate, isVerified, isAdmin, productValidation, productController.updateProduct)
-router.delete("/:id", authenticate, isVerified, isAdmin, productController.deleteProduct)
+router.get('/', authenticate, AuctionController.getAllAuctions);
+router.get('/:id', validateParams(paramSchemas.uuid), optionalAuth, AuctionController.getAuction);
+router.post('/', authenticate, validate('createAuction'), AuctionController.createAuction);
+router.post('/:id/bids', validateParams(paramSchemas.uuid), authenticate, validate('placeBid'), AuctionController.placeBid);
+router.post('/:id/watch', validateParams(paramSchemas.uuid), authenticate, AuctionController.watchAuction);
+router.delete('/:id/watch', validateParams(paramSchemas.uuid), authenticate, AuctionController.unwatchAuction);
 
 export default router;

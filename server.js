@@ -12,10 +12,11 @@ import errorHandler from './middleware/errorHandler.js';
 import authRoutes from './routes/auth.js';
 import productRoutes from './routes/products.js';
 import userRoutes from './routes/users.js';
+import Auction from './models/Auction.js'
 import verificationRoutes from './routes/verificationRoutes.js';
 import verificationURoutes from './routes/verificationURoutes.js';
 import AuctionScheduler from './service/auction-scheduler.js';
-import auctionRoutes from './routes/auctionsy.js';
+import auctionRoutes from './routes/auctions.js';
 // import bidRoutes from './routes/bidRoutes.js';
 import carRoutes from './routes/cars.js';
 import { logger } from './utils/logger.js';
@@ -132,6 +133,34 @@ io.on('connection', (socket) => {
       timestamp: new Date(),
     });
   });
+  socket.on('place_bid', async ({ auctionId, amount, userId, userName }) => {
+      try {
+        // Validaciones
+        const auction = await Auction.exists(auctionId);
+        if (!auction || auction.status !== 'active') {
+          return socket.emit('bid_error', 'Subasta no activa');
+        }
+        if (amount <= auction.currentBid) {
+          return socket.emit('bid_error', 'Puja menor al actual');
+        }
+
+        // Guardar puja en DB
+        const bid = await Auction.placeBid(auctionId, userId, userName, amount);
+
+        // Actualizar subasta
+        auction.currentBid = amount;
+        auction.highestBidder = userId;
+        auction.highestBidderName = userName;
+        auction.bidCount += 1;
+        auction.bids.unshift(bid);
+
+        // Emitir a todos en la room
+        io.to(`auction_${auctionId}`).emit('bid_placed', { auctionId, bid, auction });
+      } catch (error) {
+        console.error('Error place_bid', error);
+        socket.emit('bid_error', 'Error al procesar puja');
+      }
+   });
 
   socket.on('leave_auction', ({ auctionId }) => {
     if (!auctionId) return;

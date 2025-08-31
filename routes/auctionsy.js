@@ -126,7 +126,6 @@ router.get('/:id', validateParams(paramSchemas.uuid), optionalAuth, async (req, 
         code: 'AUCTION_NOT_FOUND'
       });
     }
-    console.log("000000000000000000000000000000000",auctions)
     const processedData = auctions.reduce((acc, row) => {
         if (!acc.car) {
             acc = {
@@ -482,15 +481,20 @@ router.post('/:id/bids', validateParams(paramSchemas.uuid), authenticate, valida
     const result = await transaction(async (connection) => {
       // Crear la puja
       const bidId = uuidv4();
+       const [rows] = await query(
+          'SELECT documento FROM usuario WHERE pre_registro_id = ? LIMIT 1', 
+          [req.user.id]
+        );
+     const usuario_idx = rows.documento; 
       await connection.execute(
         'INSERT INTO bids (id, auction_id, user_id, user_name, amount) VALUES (?, ?, ?, ?, ?)',
-        [bidId, auctionId, req.user.id, req.user.name, amount]
+        [bidId, auctionId, usuario_idx, req.user.name, amount]
       );
 
       // Actualizar la subasta
       await connection.execute(
         'UPDATE auctions SET current_bid = ?, highest_bidder_id = ?, highest_bidder_name = ?, bid_count = bid_count + 1 WHERE id = ?',
-        [amount, req.user.id, req.user.name, auctionId]
+        [amount, usuario_idx, req.user.name, auctionId]
       );
 
       return { bidId };
