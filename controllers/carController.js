@@ -1,5 +1,6 @@
 import Car from '../models/Car.js';
 import {CarService}  from '../service/car.service.js'
+import { sendRevisionEmail } from "../utils/emailService.js";
 
 
 export default class CarController {
@@ -55,7 +56,7 @@ export default class CarController {
         userId
         });
         const createdCarData = await Car.getCarId(carId);
-       
+       await sendRevisionEmail(req.user.email,req.user.name,plate)
 
       res.status(201).json({
         success: true,
@@ -115,7 +116,7 @@ export default class CarController {
     const cars = await Car.findByUserId(userIdInt);
 
     if (cars.length === 0) {
-      return res.status(404).json({
+      return res.status(402).json({
         message: 'No cars found for this user',
       });
     }
@@ -129,4 +130,88 @@ export default class CarController {
     });
   }
 }
+static async getPendingCars(req, res) {
+    try {
+      const cars = await Car.getPendingCar();
+      return res.json(cars);
+    } catch (error) {
+       console.log(error)
+      return res.status(500).json({ 
+        success: false,
+        error: 'Error al obtener los vehículos'
+      });
+    }
+  }
+
+  static async rejectCars (req, res) {
+  const { carId } = req.params;
+  const carIdInt = parseInt(carId, 10);
+
+  // Validar que carId sea un número
+  if (isNaN(carIdInt)) {
+    return res.status(400).json({ 
+      success: false,
+      message: 'Invalid car ID' 
+    });
+  }
+
+  try {
+    const success = await Car.changeStateCards(carIdInt, 6);
+
+    if (!success) {
+      return res.status(404).json({
+        success: false,
+        message: 'Error updating car state',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Car state updated successfully'
+    });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating car state',
+      error: error.message,
+    });
+  }
+}
+  static async approveCars (req, res) {
+    const { carId } = req.params;
+  const carIdInt = parseInt(carId, 10);
+console.log(req.params,carId)
+  // Validar que carId sea un número
+  if (isNaN(carIdInt)) {
+    return res.status(400).json({ 
+      success: false,
+      message: 'Invalid car ID' 
+    });
+  }
+
+  try {
+    const success = await Car.changeStateCards(carIdInt, 2);
+
+    if (!success) {
+      return res.status(404).json({
+        success: false,
+        message: 'Error updating car state',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Car state updated successfully'
+    });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating car state',
+      error: error.message,
+    });
+  }
+}   
+  
 }

@@ -19,6 +19,12 @@ import AuctionScheduler from './service/auction-scheduler.js';
 import auctionRoutes from './routes/auctions.js';
 // import bidRoutes from './routes/bidRoutes.js';
 import carRoutes from './routes/cars.js';
+import tallerRoutes from './routes/talleres.js';
+import evaluacionRoutes from './routes/evaluaciones.js';
+import horarioRoutes from './routes/horarios.js';
+import citaRoutes from './routes/citas.js';
+import reparacionRoutes from './routes/reparaciones.js';
+import tallerApiRoutes from './routes/taller.js';
 import { logger } from './utils/logger.js';
 
 const app = express();
@@ -223,6 +229,12 @@ app.use('/api/auctions', jsonMiddleware, urlencodedMiddleware, auctionRoutes);
 // app.use('/api/bids', bidRoutes);
 app.use('/api/users', jsonMiddleware, urlencodedMiddleware, userRoutes);
 app.use('/api/cars', carRoutes);
+app.use('/api/talleres', jsonMiddleware, urlencodedMiddleware, tallerRoutes);
+app.use('/api/evaluaciones', jsonMiddleware, urlencodedMiddleware, evaluacionRoutes);
+app.use('/api/horarios', jsonMiddleware, urlencodedMiddleware, horarioRoutes);
+app.use('/api/citas', jsonMiddleware, urlencodedMiddleware, citaRoutes);
+app.use('/api/reparaciones', jsonMiddleware, urlencodedMiddleware, reparacionRoutes);
+app.use('/api/taller', jsonMiddleware, urlencodedMiddleware, tallerApiRoutes);
 app.use('/api/profile', verificationURoutes);
 app.use('/api/verification', jsonMiddleware, urlencodedMiddleware, verificationRoutes);
 

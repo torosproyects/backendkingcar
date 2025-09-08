@@ -1,4 +1,4 @@
-import { getPool , query } from "../config/database.js";
+import { getPool } from "../config/database.js";
 
 const pool = getPool();
 
@@ -25,7 +25,9 @@ export class CarModel {
         vehicleData.fuelType, vehicleData.mileage
       ]
     );
-    
+    await pool.query(`INSERT INTO carrosx_estadocar (id_car, id_estado,fecha_inicio) VALUES ( ?, 8, NOW())`,
+      [result.insertId]
+    );
     return result.insertId;
   }
   

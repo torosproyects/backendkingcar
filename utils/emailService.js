@@ -53,7 +53,32 @@ export const sendWelcomeEmail = async (email, name) => {
     return false
   }
 }
+export const sendRevisionEmail = async (email, name, code) => {
+  try {
+    await sendEmail({
+      to: email,
+      subject: "Tienes un carro por revisar en Carking",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Hola ${name},</h2>
+          <p>Tienes un carro por revisar ${code}</p>
+          <p></p>
+          <p>Si no has solicitado este correo, puedes ignorarlo.</p>
+          <p>Saludos,<br>El equipo de KingCars</p>
+        </div>
+      `,
+    })
+
+    logger.info(`Correo de verificación enviado a ${email}`)
+    return true
+  } catch (error) {
+    logger.error(`Error al enviar correo de verificación a ${email}:`, error)
+    throw error
+  }
+}
+
 export default{
   sendVerificationEmail,
-  sendWelcomeEmail
+  sendWelcomeEmail,
+  sendRevisionEmail
 }

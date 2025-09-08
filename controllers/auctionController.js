@@ -7,20 +7,10 @@ class AuctionController {
       const { status, limit = 50, offset = 0 } = req.query;
       
       const auctions = await Auction.getAll({ status, limit, offset });
-      
       const auctionsWithDetails = await Promise.all(
         auctions.map(async (auction) => {
           const bids = await Auction.getBids(auction.id);
           const isWatched = req.user ? await Auction.isWatching(auction.id, req.user.id) : false;
-
-          // Manejar imágenes de forma segura
-          let images = [];
-          try {
-            images = auction.images ? JSON.parse(auction.images) : [];
-          } catch (error) {
-            console.warn('Error parsing images for auction:', auction.id, error);
-            images = [];
-          }
 
           return {
             id: auction.id,
@@ -34,7 +24,7 @@ class AuctionController {
               condition: auction.condition_status,
               description: auction.car_description,
               estimatedValue: parseFloat(auction.estimated_value || 0),
-              images: images
+              imagen: auction.imagen
             },
             startPrice: parseFloat(auction.start_price),
             reservePrice: auction.reserve_price ? parseFloat(auction.reserve_price) : null,
@@ -76,7 +66,6 @@ class AuctionController {
     try {
       const { id } = req.params;
       const auctions = await Auction.getById(id);
-
       if (auctions.length === 0) {
         return res.status(404).json({
           error: 'Subasta no encontrada',
@@ -103,7 +92,6 @@ class AuctionController {
         watchers: watchersCount,
         isWatched
       };
-
       res.json(response);
     } catch (error) {
       console.error('Error obteniendo subasta:', error);
@@ -120,6 +108,7 @@ class AuctionController {
           id: row.id,
           car: {
             id: row.car_id,
+            imagen:row.imagen,
             make: row.marca,
             model: row.modelo,
             year: row.year,
@@ -128,7 +117,7 @@ class AuctionController {
             condition: row.condicion,
             description: row.descripcion,
             estimatedValue: parseFloat(row.precio || 0),
-            images: []
+            imagenes: []
           },
           startPrice: parseFloat(row.start_price || 0),
           reservePrice: row.reserve_price ? parseFloat(row.reserve_price) : null,
@@ -152,17 +141,17 @@ class AuctionController {
         };
 
         if (row.is_principal) {
-          acc.car.images.unshift(imageData);
+          acc.car.imagenes.unshift(imageData);
         } else {
-          acc.car.images.push(imageData);
+          acc.car.imagenes.push(imageData);
         }
       }
 
       // Imagen principal directa
-      if (row.imagen_principal && !acc.car.images.some(img => img.isMain)) {
-        acc.car.images.unshift({
+      if (row.imagen_principal && !acc.car.imagenes.some(img => img.isMain)) {
+        acc.car.imagenes.unshift({
           id: `principal_${row.id}`,
-          url: row.imagen_principal,
+          url: row.imagen,
           isMain: true
         });
       }

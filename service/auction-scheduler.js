@@ -12,7 +12,7 @@ export default  class AuctionScheduler {
     // Verificar subastas cada 30 segundos
     setInterval(() => {
       this.checkAuctionStatuses();
-    }, 30000);
+    }, 15000);
 
     // Verificar inmediatamente al iniciar
     this.checkAuctionStatuses();
@@ -87,12 +87,6 @@ export default  class AuctionScheduler {
           [auction.id]
         );
 
-        // Marcar carro como no en subasta
-        await query(
-          'UPDATE carrosx SET is_in_auction = FALSE WHERE id = ?',
-          [auction.car_id]
-        );
-
         // Marcar puja ganadora si existe
         if (auction.highest_bidder_id) {
           const reserveMet = !auction.reserve_price || auction.current_bid >= auction.reserve_price;
@@ -116,10 +110,13 @@ export default  class AuctionScheduler {
             console.log(`🏆 Subasta ${auction.id} finalizada - Ganador: ${auction.highest_bidder_name}`);
           } else {
             console.log(`📋 Subasta ${auction.id} finalizada - Precio de reserva no alcanzado`);
+
           }
         } else {
           console.log(`📋 Subasta ${auction.id} finalizada - Sin pujas`);
+    //   actualizar carro de nuevo  await actualizarEstadocar({ car_id: 123 }, 2);
         }
+                 
 
         // Emitir evento WebSocket
         this.io.emit('auction_ended', {
@@ -143,7 +140,23 @@ export default  class AuctionScheduler {
       console.error('Error finalizando subastas:', error);
     }
   }
-
+ async actualizarEstadocar(auction, nuevoEstadoId) {
+  try {
+    const { car_id } = auction;
+    await query(
+      'UPDATE carrosx_estadocar SET fecha_salida = NOW() WHERE id_car = ? AND fecha_salida IS NULL',
+      [car_id]
+    );
+    await query(
+      'INSERT INTO carrosx_estadocar (id_car, id_estado, fecha_inicio) VALUES (?, ?, NOW())',
+      [car_id, nuevoEstadoId]
+    );
+    console.log(`Estado del carro ${car_id} actualizado correctamente.`);
+  } catch (error) {
+    console.error('Error al actualizar el estado del carro:', error);
+    throw new Error(`No se pudo actualizar el estado del carro: ${error.message}`);
+  }
+}
   async sendEndingAlerts(now) {
     try {
       // Alertas para subastas que terminan en 5 minutos

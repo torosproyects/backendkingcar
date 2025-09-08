@@ -19,6 +19,7 @@ class Auction {
       c.year, c.kilometraje as mileage, c.color, c.condicion as condition_status,
       c.descripcion as car_description, c.precio as estimated_value,
       (SELECT COUNT(*) FROM bids b WHERE b.auction_id = a.id) as bid_count, 
+      (SELECT url FROM imagenes_carrosx WHERE carro_id = c.id AND es_principal = 1 LIMIT 1) AS imagen,
       (SELECT COUNT(*) FROM auction_watchers aw WHERE aw.auction_id = a.id) as watchers_count
       FROM auctions a
       JOIN carrosx c ON a.car_id = c.id
@@ -44,7 +45,7 @@ class Auction {
     const queryStr = `SELECT 
       a.*, c.year, m.nombre AS marca, mo.nombre AS modelo, 
       c.kilometraje, c.color, c.condicion, c.descripcion, c.precio,
-      ic_principal.url AS imagen_principal, ic.id AS image_id, ic.url AS image_url, 
+      ic_principal.url AS imagen, ic.id AS image_id, ic.url AS image_url, 
       ic.es_principal AS is_principal 
       FROM auctions a 
       JOIN carrosx c ON a.car_id = c.id 
