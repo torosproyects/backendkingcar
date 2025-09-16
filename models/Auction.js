@@ -103,7 +103,7 @@ class Auction {
       await connection.query(
         'INSERT INTO auctions (id, car_id, seller_id, seller_name, start_price, reserve_price, current_bid, start_time, end_time, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [auctionId, carId, userIdx, userName, startPrice, reservePrice, startPrice, startTime, endTime, status]
-      );
+      ); 
 
       await connection.query(
         'UPDATE carrosx_estadocar SET fecha_salida = NOW() WHERE id_car = ? AND fecha_salida IS NULL',

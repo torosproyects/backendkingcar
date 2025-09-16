@@ -13,8 +13,8 @@ import authRoutes from './routes/auth.js';
 import productRoutes from './routes/products.js';
 import userRoutes from './routes/users.js';
 import Auction from './models/Auction.js'
-import verificationRoutes from './routes/verificationRoutes.js';
-import verificationURoutes from './routes/verificationURoutes.js';
+// import verificationRoutes from './routes/verificationRoutes.js';
+// import verificationURoutes from './routes/verificationURoutes.js';
 import AuctionScheduler from './service/auction-scheduler.js';
 import auctionRoutes from './routes/auctions.js';
 // import bidRoutes from './routes/bidRoutes.js';
@@ -25,6 +25,7 @@ import horarioRoutes from './routes/horarios.js';
 import citaRoutes from './routes/citas.js';
 import reparacionRoutes from './routes/reparaciones.js';
 import tallerApiRoutes from './routes/taller.js';
+import verificationRoutes from './routes/verification.js';
 import { logger } from './utils/logger.js';
 
 const app = express();
@@ -235,8 +236,8 @@ app.use('/api/horarios', jsonMiddleware, urlencodedMiddleware, horarioRoutes);
 app.use('/api/citas', jsonMiddleware, urlencodedMiddleware, citaRoutes);
 app.use('/api/reparaciones', jsonMiddleware, urlencodedMiddleware, reparacionRoutes);
 app.use('/api/taller', jsonMiddleware, urlencodedMiddleware, tallerApiRoutes);
-app.use('/api/profile', verificationURoutes);
-app.use('/api/verification', jsonMiddleware, urlencodedMiddleware, verificationRoutes);
+// app.use('/api/profile', verificationURoutes);
+app.use('/api/verification', verificationRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.status(200).json({ status: 'OK', message: 'Servidor funcionando correctamente' });

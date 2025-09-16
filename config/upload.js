@@ -29,4 +29,21 @@ const verificationUpload = multer({
   }
 });
 
-export { upload, verificationUpload };
+// Nueva configuración para verificación con múltiples archivos (PDFs + imagen)
+const verificationSubmitUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: (req, file, cb) => {
+    // Permitir imágenes Y PDFs
+    if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Solo se permiten imágenes y archivos PDF'), false);
+    }
+  },
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB por archivo
+    files: 8 // Máximo 8 archivos
+  }
+});
+
+export { upload, verificationUpload, verificationSubmitUpload };

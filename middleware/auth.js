@@ -45,6 +45,38 @@ export const isAdmin = (req, res, next) => {
   next();
 };
 
+// Middleware para verificar si el usuario es administrador (verificación en BD)
+export const isAdminDB = async (req, res, next) => {
+  try {
+    const userId = req.user.id; // ID de pre_registro desde cookies
+    
+    // Verificar si el usuario tiene rol de administrador
+    const adminCheck = await query(`
+      SELECT r.nombre as rol
+      FROM usuario u
+      JOIN usuario_roles ur ON u.documento = ur.usuario_documento
+      JOIN roles r ON ur.rol_id = r.id
+      WHERE u.pre_registro_id = ? AND r.nombre = 'Administrador'
+      LIMIT 1
+    `, [userId]);
+
+    if (adminCheck.length === 0) {
+      return res.status(403).json({ 
+        success: false,
+        error: "Acceso denegado - No tienes permisos de administrador" 
+      });
+    }
+
+    next();
+  } catch (error) {
+    logger.error('Error verificando permisos de administrador:', error);
+    return res.status(500).json({ 
+      success: false,
+      error: "Error interno del servidor" 
+    });
+  }
+};
+
 // Middleware de autenticación con verificación en base de datos
 export const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
