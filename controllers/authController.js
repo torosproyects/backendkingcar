@@ -3,14 +3,17 @@ import UserPre from "../models/UserPre.js";
 import { generateToken, generateVerificationCode } from "../utils/security.js";
 import { sendVerificationEmail } from "../utils/emailService.js";
 
-
 // Configuración de cookies
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-  maxAge: 60 * 60 * 1000,
-  path: '/'
+  maxAge: 60 * 60 * 1000, // 3600000 milisegundos = 1 hora (maxAge debe estar en milisegundos)
+  path: '/',
+  // Para desarrollo local, no especificar dominio para que funcione en localhost
+  ...(process.env.NODE_ENV === 'production' && { 
+    domain: process.env.COOKIE_DOMAIN 
+  })
 };
 
 // Pre-registro: enviar código de verificación

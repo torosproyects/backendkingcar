@@ -46,10 +46,11 @@ router.get(
   getMyVerification
 );
 
-// GET /api/verification/download/:archivoId - Descargar archivo
+// GET /api/verification/download/:archivoId - Descargar archivo (Solo Admin)
 router.get(
   '/download/:archivoId',
   authenticate,
+  isAdminDB,
   downloadArchivo
 );
 

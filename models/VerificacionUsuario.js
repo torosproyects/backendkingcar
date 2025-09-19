@@ -205,6 +205,27 @@ export default class VerificacionUsuario {
       throw error;
     }
   }
+
+  // Obtener información del usuario desde pre_registro
+  static async getUserInfo(preRegistroId) {
+    const sql = `
+      SELECT 
+        pr.id,
+        pr.name,
+        pr.email,
+        pr.fecha_registro
+      FROM pre_registro pr
+      WHERE pr.id = ?
+    `;
+
+    try {
+      const rows = await query(sql, [preRegistroId]);
+      return rows.length > 0 ? rows[0] : null;
+    } catch (error) {
+      logger.error('Error en VerificacionUsuario.getUserInfo():', error);
+      throw error;
+    }
+  }
 }
 
 

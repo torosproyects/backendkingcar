@@ -20,7 +20,7 @@ export const generateToken = (user) => {
     id: user.id,
     name: user.name,
     email: user.email,
-    role: user.rol 
+    role: user.role 
   };
 
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });

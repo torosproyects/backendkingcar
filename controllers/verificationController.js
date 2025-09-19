@@ -222,11 +222,10 @@ export const getMyVerification = async (req, res) => {
   }
 };
 
-// GET /api/verification/download/:archivoId - Descargar archivo
+// GET /api/verification/download/:archivoId - Descargar archivo (Solo Admin)
 export const downloadArchivo = async (req, res) => {
   try {
     const { archivoId } = req.params;
-    const userId = req.user.id;
 
     const archivo = await ArchivosVerificacion.getArchivoById(archivoId);
     
@@ -234,14 +233,6 @@ export const downloadArchivo = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Archivo no encontrado'
-      });
-    }
-
-    // Verificar que el usuario solo pueda descargar sus propios archivos
-    if (archivo.pre_registro_id !== parseInt(userId)) {
-      return res.status(403).json({
-        success: false,
-        message: 'No tienes permisos para descargar este archivo'
       });
     }
 
@@ -302,6 +293,7 @@ export const getPendingVerifications = async (req, res) => {
         const archivos = await ArchivosVerificacion.getByVerificacionId(verificacion.pre_registro_id);
         return {
           ...verificacion,
+          id: verificacion.pre_registro_id, // Cambiar pre_registro_id por id
           archivos: archivos.map(archivo => ({
             id: archivo.id,
             tipo: archivo.tipo_archivo,
@@ -388,6 +380,7 @@ export const getVerificationById = async (req, res) => {
     // Estructurar respuesta con todos los documentos
     const verificacionCompleta = {
       ...verificacion,
+      id: verificacion.pre_registro_id, // Cambiar pre_registro_id por id
       usuario_info: usuarioInfo,
       documentos: {
         // Foto de documento (Cloudinary)
